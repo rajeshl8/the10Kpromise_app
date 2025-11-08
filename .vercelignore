@@ -1,0 +1,14 @@
+# Don't deploy these files to Vercel
+.env.local
+.env*.local
+*.log
+.DS_Store
+
+# Development documentation (not needed on Vercel)
+docs/
+GITHUB_CHECKLIST.md
+
+# Development files
+.vscode/
+.idea/
+

@@ -1,0 +1,6 @@
+Partner First Name,Partner Last Name,HGI Partner ID,Partner Email,Client State,Product Type,Promise Date,Family Notes
+John,Smith,HGI001,john.smith@example.com,CA,Term Life,2025-01-15,Example family - Term Life insurance
+Jane,Doe,HGI002,jane.doe@example.com,TX,Will&Trust,2025-01-20,Example family - Will and Trust
+Robert,Johnson,HGI003,robert.j@example.com,NY,Term Life,01/25/2025,Date format: MM/DD/YYYY also works
+Mary,Williams,HGI004,mary.w@example.com,FL,Will&Trust,2025-02-10,Optional notes about the family
+

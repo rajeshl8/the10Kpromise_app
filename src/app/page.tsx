@@ -18,6 +18,7 @@ export default function Page() {
   const [protectedCount, setProtectedCount] = useState<number | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(false)
   const prevRemaining = useRef<number | null>(null)
 
   useEffect(() => {
@@ -45,8 +46,12 @@ export default function Page() {
         setPartnerData(null)
         setShowProfileModal(false)
         setIsAuthorized(null)
+        setCheckingAuth(false)
         return 
       }
+      
+      // Start checking authorization
+      setCheckingAuth(true)
       
       // First, check if partner exists by user_id (already linked)
       const { data: rows } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
@@ -89,6 +94,9 @@ export default function Page() {
         setIsAuthorized(true)
         checkProfileCompletion(rows[0])
       }
+      
+      // Done checking authorization
+      setCheckingAuth(false)
     }
     ensurePartner()
   }, [user])
@@ -153,8 +161,8 @@ export default function Page() {
         />
       )}
 
-      {/* Unauthorized User Message */}
-      {user && isAuthorized === false && (
+      {/* Unauthorized User Message - Only show after checking is complete */}
+      {user && !checkingAuth && isAuthorized === false && (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-8 flex items-center justify-center">
           <div className="max-w-md w-full bg-white rounded-2xl border border-red-200 shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">

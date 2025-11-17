@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabaseClient'
 export default function UploadPage() {
   const [rows, setRows] = useState<any[]>([])
   const [msg, setMsg] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   const onFile = (file: File) => {
     setMsg('Parsing…')
@@ -36,21 +37,107 @@ export default function UploadPage() {
           }
         })
         setRows(cleaned)
-        setMsg(`Parsed ${cleaned.length} rows. Click "Upload to staging".`)
+        setMsg(`✅ Parsed ${cleaned.length} rows. Ready to upload!`)
       }
     })
   }
 
-  const upload = async () => {
-    setMsg('Uploading…')
-    const { error } = await supabase.from('staging_protections').insert(rows)
-    setMsg(error ? 'Upload error: '+error.message : 'Uploaded to staging. Now click "Promote to production".')
-  }
+  const uploadDirectly = async () => {
+    if (rows.length === 0) {
+      setMsg('❌ No data to upload')
+      return
+    }
 
-  const promote = async () => {
-    setMsg('Promoting…')
-    const { data, error } = await supabase.rpc('promote_staging_protections')
-    setMsg(error ? 'Promote error: '+error.message : `Promoted. Inserted count: ${JSON.stringify(data)}`)
+    setUploading(true)
+    setMsg('⏳ Uploading protections...')
+
+    try {
+      let successCount = 0
+      let errorCount = 0
+      const errors: string[] = []
+
+      // Process each row
+      for (const row of rows) {
+        try {
+          // 1. Find or create partner
+          let partnerId: string | null = null
+          let partnerUserId: string | null = null
+
+          if (row.partner_email) {
+            // Try to find partner by email first
+            const { data: partnerByEmail } = await supabase
+              .from('partners')
+              .select('id, user_id')
+              .eq('email', row.partner_email)
+              .single()
+
+            if (partnerByEmail) {
+              partnerId = partnerByEmail.id
+              partnerUserId = partnerByEmail.user_id
+            }
+          }
+
+          if (!partnerId && row.hgi_partner_id) {
+            // Try to find by HGI ID
+            const { data: partnerByHGI } = await supabase
+              .from('partners')
+              .select('id, user_id')
+              .eq('hgi_partner_id', row.hgi_partner_id)
+              .single()
+
+            if (partnerByHGI) {
+              partnerId = partnerByHGI.id
+              partnerUserId = partnerByHGI.user_id
+            }
+          }
+
+          // If partner doesn't exist, skip this row (or you could create a placeholder)
+          if (!partnerId || !partnerUserId) {
+            errorCount++
+            errors.push(`No partner found for: ${row.partner_email || row.hgi_partner_id || 'Unknown'}`)
+            continue
+          }
+
+          // 2. Insert protection directly
+          const { error: insertError } = await supabase
+            .from('protections')
+            .insert({
+              partner_id: partnerId,
+              partner_user_id: partnerUserId,
+              client_state: row.client_state,
+              product_type: row.product_type,
+              promise_date: row.promise_date,
+              family_notes: row.family_notes,
+              status: 'approved',
+            })
+
+          if (insertError) {
+            errorCount++
+            errors.push(`Failed to insert: ${insertError.message}`)
+          } else {
+            successCount++
+          }
+        } catch (err: any) {
+          errorCount++
+          errors.push(`Row error: ${err.message}`)
+        }
+      }
+
+      // Show results
+      if (errorCount === 0) {
+        setMsg(`🎉 Success! Uploaded ${successCount} protections.`)
+      } else {
+        setMsg(
+          `⚠️ Partial success: ${successCount} uploaded, ${errorCount} failed.\n\nErrors:\n${errors.slice(0, 5).join('\n')}${
+            errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''
+          }`
+        )
+      }
+    } catch (err: any) {
+      setMsg(`❌ Upload failed: ${err.message}`)
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -106,31 +193,30 @@ export default function UploadPage() {
               onChange={e=>e.target.files && onFile(e.target.files[0])}
               className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
+            <p className="mt-2 text-xs text-slate-500">
+              ℹ️ Partner must exist (by email or HGI ID) to upload their protections. Create partners first in the <a href="/admin/partners" className="text-blue-600 hover:underline">Partners page</a>.
+            </p>
           </div>
 
           <div className="flex gap-3">
             <button 
-              className="px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors font-medium" 
-              onClick={upload}
-              disabled={rows.length === 0}
+              className="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+              onClick={uploadDirectly}
+              disabled={rows.length === 0 || uploading}
             >
-              1. Upload to Staging
-            </button>
-            <button 
-              className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md" 
-              onClick={promote}
-            >
-              2. Promote to Production
+              {uploading ? '⏳ Uploading...' : '🚀 Upload to Production'}
             </button>
           </div>
 
           {msg && (
             <div className={`p-4 rounded-lg border ${
-              msg.includes('error') || msg.includes('Error')
+              msg.includes('❌') || msg.includes('error') || msg.includes('Error')
                 ? 'bg-red-50 border-red-200 text-red-800'
+                : msg.includes('⚠️')
+                ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
                 : 'bg-green-50 border-green-200 text-green-800'
             }`}>
-              <p className="text-sm font-medium">{msg}</p>
+              <p className="text-sm font-medium whitespace-pre-line">{msg}</p>
             </div>
           )}
         </div>

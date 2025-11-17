@@ -1,0 +1,1 @@
+INSERT INTO "public"."admins" ("user_id", "note", "created_at") VALUES ('c70be289-d001-42ad-9229-a1f134b740ed', 'Lingam Rajesh - Admin', '2025-11-08 02:46:29.160293+00');

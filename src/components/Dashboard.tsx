@@ -19,12 +19,18 @@ interface LeaderboardEntry {
   completion_percentage: number
 }
 
+type DateFilter = 'all' | '7days' | '30days' | 'custom'
+
 export default function Dashboard({ partner }: { partner: { id: string, user_id: string } | null }) {
   const [stats, setStats] = useState<PartnerStats | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [editingTarget, setEditingTarget] = useState(false)
   const [newTarget, setNewTarget] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+  const [showCustomDates, setShowCustomDates] = useState(false)
 
   useEffect(() => {
     if (!partner) return
@@ -32,6 +38,10 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
     loadLeaderboard()
     checkAdmin()
   }, [partner])
+
+  useEffect(() => {
+    loadLeaderboard()
+  }, [dateFilter, customStartDate, customEndDate])
 
   useEffect(() => {
     // Subscribe to realtime changes
@@ -58,10 +68,32 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
   }
 
   const loadLeaderboard = async () => {
-    const { data } = await supabase
-      .from('leaderboard')
-      .select('*')
-      .limit(10)
+    let startDate: string | null = null
+    let endDate: string | null = null
+
+    const today = new Date()
+    
+    if (dateFilter === '7days') {
+      const date7DaysAgo = new Date(today)
+      date7DaysAgo.setDate(today.getDate() - 7)
+      startDate = date7DaysAgo.toISOString().split('T')[0]
+      endDate = today.toISOString().split('T')[0]
+    } else if (dateFilter === '30days') {
+      const date30DaysAgo = new Date(today)
+      date30DaysAgo.setDate(today.getDate() - 30)
+      startDate = date30DaysAgo.toISOString().split('T')[0]
+      endDate = today.toISOString().split('T')[0]
+    } else if (dateFilter === 'custom') {
+      startDate = customStartDate || null
+      endDate = customEndDate || null
+    }
+
+    const { data } = await supabase.rpc('get_leaderboard_filtered', {
+      start_date: startDate,
+      end_date: endDate,
+      limit_count: 10
+    })
+    
     if (data) setLeaderboard(data)
   }
 
@@ -126,7 +158,45 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
             <span className="text-2xl">🏆</span>
             <h2 className="text-xl font-bold text-slate-900">Top 10 Leaders</h2>
           </div>
-          <p className="text-sm text-slate-600 mb-4">Most families protected</p>
+          <p className="text-sm text-slate-600 mb-3">Most families protected</p>
+
+          {/* Date Filter Dropdown */}
+          <div className="mb-4">
+            <select 
+              value={dateFilter}
+              onChange={(e) => {
+                const value = e.target.value as DateFilter
+                setDateFilter(value)
+                setShowCustomDates(value === 'custom')
+              }}
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="all">All Time</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            
+            {/* Custom Date Range Inputs */}
+            {showCustomDates && (
+              <div className="mt-2 space-y-2">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  placeholder="Start Date"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  placeholder="End Date"
+                  className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             {leaderboard.length === 0 ? (
@@ -156,13 +226,12 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
                       {entry.name}
                       {isCurrentUser(entry.id) && <span className="ml-1 text-blue-600">(You)</span>}
                     </p>
-                    <p className="text-xs text-slate-600">
-                      {entry.completed_count} / {entry.personal_target} families
-                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-slate-900">{entry.completed_count}</p>
-                    <p className="text-xs text-slate-600">{entry.completion_percentage}%</p>
+                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {entry.completed_count}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">{entry.completion_percentage}%</p>
                   </div>
                 </div>
               ))

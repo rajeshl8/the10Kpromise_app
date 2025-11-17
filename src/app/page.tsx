@@ -17,6 +17,7 @@ export default function Page() {
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [protectedCount, setProtectedCount] = useState<number | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const prevRemaining = useRef<number | null>(null)
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function Page() {
         setPartner(null)
         setPartnerData(null)
         setShowProfileModal(false)
+        setIsAuthorized(null)
         return 
       }
       
@@ -72,25 +74,19 @@ export default function Page() {
           if (updated && updated[0]) {
             setPartner({ id: updated[0].id, user_id: updated[0].user_id })
             setPartnerData(updated[0])
+            setIsAuthorized(true)
             checkProfileCompletion(updated[0])
           }
         } else {
-          // No existing partner - create new one
-          await supabase.from('partners').insert({ 
-            user_id: user.id, 
-            email: user.email, 
-            display_name: user.user_metadata?.full_name 
-          })
-          const { data: again } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
-          if (again && again[0]) {
-            setPartner({ id: again[0].id, user_id: again[0].user_id })
-            setPartnerData(again[0])
-            checkProfileCompletion(again[0])
-          }
+          // No existing partner found - User is NOT AUTHORIZED
+          setPartner(null)
+          setPartnerData(null)
+          setIsAuthorized(false)
         }
       } else {
         setPartner({ id: rows[0].id, user_id: rows[0].user_id })
         setPartnerData(rows[0])
+        setIsAuthorized(true)
         checkProfileCompletion(rows[0])
       }
     }
@@ -149,7 +145,7 @@ export default function Page() {
   return (
     <>
       {/* Profile Completion Modal - Shows when profile is incomplete */}
-      {showProfileModal && user && (
+      {showProfileModal && user && isAuthorized && (
         <ProfileCompletionModal
           partner={partner}
           displayName={user.user_metadata?.full_name}
@@ -157,6 +153,40 @@ export default function Page() {
         />
       )}
 
+      {/* Unauthorized User Message */}
+      {user && isAuthorized === false && (
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-8 flex items-center justify-center">
+          <div className="max-w-md w-full bg-white rounded-2xl border border-red-200 shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🚫</span>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Access Not Authorized</h2>
+            <p className="text-slate-700 mb-2">
+              Your email <strong>{user.email}</strong> is not registered as an authorized partner.
+            </p>
+            <p className="text-slate-600 text-sm mb-6">
+              Please contact the administrator to request access.
+            </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-slate-700">
+                <strong>Contact:</strong>{' '}
+                <a href="mailto:the10kpromise@gmail.com" className="text-blue-600 hover:text-blue-700 underline">
+                  the10kpromise@gmail.com
+                </a>
+              </p>
+            </div>
+            <button
+              onClick={signOut}
+              className="w-full px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg font-medium transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Only show if not logged in OR authorized */}
+      {(!user || isAuthorized === true) && (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-8">
         <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between">
@@ -240,6 +270,7 @@ export default function Page() {
         </footer>
         </div>
       </div>
+      )}
     </>
   )
 }

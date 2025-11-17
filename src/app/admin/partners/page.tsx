@@ -19,6 +19,8 @@ export default function PartnersManagementPage() {
   const [filteredPartners, setFilteredPartners] = useState<Partner[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [editingPartner, setEditingPartner] = useState<Partner | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newPartner, setNewPartner] = useState({ email: '', first_name: '', last_name: '', hgi_partner_id: '' })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -79,6 +81,53 @@ export default function PartnersManagementPage() {
     }
   }
 
+  const handleAddPartner = async () => {
+    const email = newPartner.email.trim().toLowerCase()
+    
+    if (!email) {
+      alert('Email is required')
+      return
+    }
+
+    // Basic email validation
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      alert('Please enter a valid email address')
+      return
+    }
+
+    // Check if partner already exists
+    const { data: existing } = await supabase
+      .from('partners')
+      .select('email')
+      .eq('email', email)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
+      alert('A partner with this email already exists')
+      return
+    }
+
+    // Generate a random UUID for user_id (will be updated when they first sign in)
+    const { data, error } = await supabase
+      .from('partners')
+      .insert({
+        user_id: crypto.randomUUID(),
+        email: email,
+        first_name: newPartner.first_name.trim() || null,
+        last_name: newPartner.last_name.trim() || null,
+        hgi_partner_id: newPartner.hgi_partner_id.trim().toUpperCase() || null,
+        personal_target: 100
+      })
+
+    if (error) {
+      alert('Error adding partner: ' + error.message)
+    } else {
+      setShowAddModal(false)
+      setNewPartner({ email: '', first_name: '', last_name: '', hgi_partner_id: '' })
+      loadPartners()
+    }
+  }
+
   const getProtectionCount = (partnerId: string) => {
     // This would ideally come from a join or separate query
     // For now, we'll add it in a future enhancement
@@ -95,6 +144,12 @@ export default function PartnersManagementPage() {
             <p className="text-slate-600">View and edit all partner information</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="rounded-lg px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-semibold shadow-md"
+            >
+              ➕ Add Partner
+            </button>
             <a 
               href="/admin/upload" 
               className="rounded-lg px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 transition-colors text-sm font-medium"
@@ -285,6 +340,90 @@ export default function PartnersManagementPage() {
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-md"
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Partner Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Add New Partner</h3>
+            <p className="text-sm text-slate-600 mb-6">Partner will be able to sign in once added</p>
+            
+            <div className="space-y-4">
+              {/* Email (Required) */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={newPartner.email}
+                  onChange={(e) => setNewPartner({...newPartner, email: e.target.value})}
+                  placeholder="partner@example.com"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  autoFocus
+                />
+                <p className="text-xs text-slate-500 mt-1">Required - Partner will sign in with this email</p>
+              </div>
+
+              {/* First Name (Optional) */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={newPartner.first_name}
+                  onChange={(e) => setNewPartner({...newPartner, first_name: e.target.value})}
+                  placeholder="Optional"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              {/* Last Name (Optional) */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={newPartner.last_name}
+                  onChange={(e) => setNewPartner({...newPartner, last_name: e.target.value})}
+                  placeholder="Optional"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              {/* HGI Partner ID (Optional) */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">HGI Partner ID</label>
+                <input
+                  type="text"
+                  value={newPartner.hgi_partner_id}
+                  onChange={(e) => setNewPartner({...newPartner, hgi_partner_id: e.target.value.toUpperCase()})}
+                  placeholder="Optional"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"
+                />
+                <p className="text-xs text-slate-500 mt-1">Partner can add this later during first login</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddModal(false)
+                  setNewPartner({ email: '', first_name: '', last_name: '', hgi_partner_id: '' })
+                }}
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddPartner}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-md"
+              >
+                Add Partner
               </button>
             </div>
           </div>

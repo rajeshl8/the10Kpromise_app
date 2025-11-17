@@ -156,7 +156,7 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
         <div className="rounded-2xl border border-slate-200 bg-white shadow-lg p-6 sticky top-8">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🏆</span>
-            <h2 className="text-xl font-bold text-slate-900">Top 10 Leaders</h2>
+            <h2 className="text-xl font-bold text-slate-900">Leaderboard</h2>
           </div>
           <p className="text-sm text-slate-600 mb-3">Most families protected</p>
 
@@ -231,7 +231,6 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
                     <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                       {entry.completed_count}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">{entry.completion_percentage}%</p>
                   </div>
                 </div>
               ))

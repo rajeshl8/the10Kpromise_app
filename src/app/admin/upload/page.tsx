@@ -54,6 +54,7 @@ export default function UploadPage() {
     try {
       let successCount = 0
       let errorCount = 0
+      let partnersCreated = 0
       const errors: string[] = []
 
       // Process each row
@@ -91,11 +92,41 @@ export default function UploadPage() {
             }
           }
 
-          // If partner doesn't exist, skip this row (or you could create a placeholder)
+          // If partner doesn't exist, create them!
           if (!partnerId || !partnerUserId) {
-            errorCount++
-            errors.push(`No partner found for: ${row.partner_email || row.hgi_partner_id || 'Unknown'}`)
-            continue
+            if (!row.partner_email || !row.hgi_partner_id) {
+              errorCount++
+              errors.push(`Missing email or HGI ID for partner: ${row.partner_first_name} ${row.partner_last_name}`)
+              continue
+            }
+
+            // Generate a unique user_id for this admin-created partner
+            // When they login with Google later, we'll update this user_id to their real auth user_id
+            const tempUserId = crypto.randomUUID()
+            
+            const { data: newPartner, error: partnerError } = await supabase
+              .from('partners')
+              .insert({
+                user_id: tempUserId,
+                email: row.partner_email,
+                first_name: row.partner_first_name,
+                last_name: row.partner_last_name,
+                display_name: `${row.partner_first_name || ''} ${row.partner_last_name || ''}`.trim(),
+                hgi_partner_id: row.hgi_partner_id,
+                personal_target: 100,
+              })
+              .select('id, user_id')
+              .single()
+
+            if (partnerError || !newPartner) {
+              errorCount++
+              errors.push(`Failed to create partner ${row.partner_email}: ${partnerError?.message || 'Unknown error'}`)
+              continue
+            }
+
+            partnerId = newPartner.id
+            partnerUserId = newPartner.user_id
+            partnersCreated++
           }
 
           // 2. Insert protection directly
@@ -125,10 +156,12 @@ export default function UploadPage() {
 
       // Show results
       if (errorCount === 0) {
-        setMsg(`🎉 Success! Uploaded ${successCount} protections.`)
+        const partnerMsg = partnersCreated > 0 ? ` (${partnersCreated} new partner${partnersCreated > 1 ? 's' : ''} created)` : ''
+        setMsg(`🎉 Success! Uploaded ${successCount} protection${successCount > 1 ? 's' : ''}${partnerMsg}.`)
       } else {
+        const partnerMsg = partnersCreated > 0 ? `\n✅ Created ${partnersCreated} new partner${partnersCreated > 1 ? 's' : ''}\n` : ''
         setMsg(
-          `⚠️ Partial success: ${successCount} uploaded, ${errorCount} failed.\n\nErrors:\n${errors.slice(0, 5).join('\n')}${
+          `⚠️ Partial success: ${successCount} uploaded, ${errorCount} failed.${partnerMsg}\n\nErrors:\n${errors.slice(0, 5).join('\n')}${
             errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''
           }`
         )
@@ -194,7 +227,7 @@ export default function UploadPage() {
               className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
             <p className="mt-2 text-xs text-slate-500">
-              ℹ️ Partner must exist (by email or HGI ID) to upload their protections. Create partners first in the <a href="/admin/partners" className="text-blue-600 hover:underline">Partners page</a>.
+              ℹ️ Partners will be automatically created if they don't exist. Make sure each row has Email, HGI ID, First Name, and Last Name.
             </p>
           </div>
 

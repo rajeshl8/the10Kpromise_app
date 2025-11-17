@@ -46,26 +46,51 @@ export default function Page() {
         return 
       }
       
+      // First, check if partner exists by user_id (already linked)
       const { data: rows } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
       
       if (!rows || rows.length === 0) {
-        // Create new partner record with basic info from Google
-        await supabase.from('partners').insert({ 
-          user_id: user.id, 
-          email: user.email, 
-          display_name: user.user_metadata?.full_name 
-        })
-        const { data: again } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
-        if (again && again[0]) {
-          setPartner({ id: again[0].id, user_id: again[0].user_id })
-          setPartnerData(again[0])
-          // Check if profile is incomplete
-          checkProfileCompletion(again[0])
+        // Check if partner was created by admin with this email (not yet linked to auth user)
+        const { data: existingByEmail } = await supabase
+          .from('partners')
+          .select('*')
+          .eq('email', user.email)
+          .limit(1)
+        
+        if (existingByEmail && existingByEmail[0]) {
+          // Partner exists! Update their user_id to link to this auth user
+          await supabase
+            .from('partners')
+            .update({ 
+              user_id: user.id,
+              display_name: user.user_metadata?.full_name || existingByEmail[0].display_name
+            })
+            .eq('id', existingByEmail[0].id)
+          
+          // Reload the updated partner
+          const { data: updated } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
+          if (updated && updated[0]) {
+            setPartner({ id: updated[0].id, user_id: updated[0].user_id })
+            setPartnerData(updated[0])
+            checkProfileCompletion(updated[0])
+          }
+        } else {
+          // No existing partner - create new one
+          await supabase.from('partners').insert({ 
+            user_id: user.id, 
+            email: user.email, 
+            display_name: user.user_metadata?.full_name 
+          })
+          const { data: again } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
+          if (again && again[0]) {
+            setPartner({ id: again[0].id, user_id: again[0].user_id })
+            setPartnerData(again[0])
+            checkProfileCompletion(again[0])
+          }
         }
       } else {
         setPartner({ id: rows[0].id, user_id: rows[0].user_id })
         setPartnerData(rows[0])
-        // Check if profile is incomplete
         checkProfileCompletion(rows[0])
       }
     }

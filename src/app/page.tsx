@@ -223,6 +223,21 @@ export default function Page() {
             <Dashboard partner={partner} />
           </div>
         )}
+
+        {/* Footer with Privacy Policy Link */}
+        <footer className="mt-16 pt-8 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-600">
+            <p>© 2024 The10KPromise. All rights reserved.</p>
+            <div className="flex gap-6">
+              <a 
+                href="/privacy" 
+                className="text-blue-600 hover:text-blue-700 font-medium underline"
+              >
+                Privacy Policy
+              </a>
+            </div>
+          </div>
+        </footer>
         </div>
       </div>
     </>

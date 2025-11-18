@@ -65,22 +65,25 @@ export default function Page() {
           .limit(1)
         
         if (existingByEmail && existingByEmail[0]) {
-          // Partner exists! Update their user_id to link to this auth user
-          await supabase
-            .from('partners')
-            .update({ 
-              user_id: user.id,
-              display_name: user.user_metadata?.full_name || existingByEmail[0].display_name
-            })
-            .eq('id', existingByEmail[0].id)
+          // Partner exists! Use secure function to link their account (bypasses RLS)
+          const { data: linkedPartnerId, error: linkError } = await supabase
+            .rpc('link_partner_by_email', { p_email: user.email })
           
-          // Reload the updated partner
-          const { data: updated } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
-          if (updated && updated[0]) {
-            setPartner({ id: updated[0].id, user_id: updated[0].user_id })
-            setPartnerData(updated[0])
-            setIsAuthorized(true)
-            checkProfileCompletion(updated[0])
+          if (!linkError && linkedPartnerId) {
+            // Reload the linked partner
+            const { data: updated } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
+            if (updated && updated[0]) {
+              setPartner({ id: updated[0].id, user_id: updated[0].user_id })
+              setPartnerData(updated[0])
+              setIsAuthorized(true)
+              checkProfileCompletion(updated[0])
+            }
+          } else {
+            // Link failed - should not happen, but fallback to unauthorized
+            console.error('Failed to link partner:', linkError)
+            setPartner(null)
+            setPartnerData(null)
+            setIsAuthorized(false)
           }
         } else {
           // No existing partner found - User is NOT AUTHORIZED

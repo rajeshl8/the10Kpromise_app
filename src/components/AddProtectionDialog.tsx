@@ -7,6 +7,7 @@ export default function AddProtectionDialog({ partner }: { partner: { id: string
   const [notes, setNotes] = useState('')
   const [state, setState] = useState('')
   const [product, setProduct] = useState('')
+  const [source, setSource] = useState('')
   const [date, setDate] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -19,10 +20,11 @@ export default function AddProtectionDialog({ partner }: { partner: { id: string
         family_notes: notes || null,
         client_state: state || null,
         product_type: product || null,
+        client_source: source || null,
         promise_date: date || null,
         status: 'approved',
       })
-      if (!error) { setOpen(false); setNotes(''); setState(''); setProduct(''); setDate('') }
+      if (!error) { setOpen(false); setNotes(''); setState(''); setProduct(''); setSource(''); setDate('') }
       else alert(error.message)
     })
   }
@@ -35,13 +37,21 @@ export default function AddProtectionDialog({ partner }: { partner: { id: string
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl p-6" onClick={e=>e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4 text-slate-900">Log a protected family</h3>
             <div className="grid gap-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <input 
                   className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                   placeholder="Client State" 
                   value={state} 
                   onChange={e=>setState(e.target.value)} 
                 />
+                <input 
+                  type="date" 
+                  className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                  value={date} 
+                  onChange={e=>setDate(e.target.value)} 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <select 
                   className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" 
                   value={product} 
@@ -51,12 +61,17 @@ export default function AddProtectionDialog({ partner }: { partner: { id: string
                   <option value="Will&Trust">Will&Trust</option>
                   <option value="Term Life">Term Life</option>
                 </select>
-                <input 
-                  type="date" 
-                  className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                  value={date} 
-                  onChange={e=>setDate(e.target.value)} 
-                />
+                <select 
+                  className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" 
+                  value={source} 
+                  onChange={e=>setSource(e.target.value)}
+                >
+                  <option value="">Source of Client</option>
+                  <option value="Referral">Referral</option>
+                  <option value="Social Media">Social Media</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Stall/Event/Booth/Webinar">Stall/Event/Booth/Webinar</option>
+                </select>
               </div>
               <input 
                 className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 

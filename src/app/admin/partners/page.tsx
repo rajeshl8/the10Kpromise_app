@@ -83,9 +83,28 @@ export default function PartnersManagementPage() {
 
   const handleAddPartner = async () => {
     const email = newPartner.email.trim().toLowerCase()
+    const firstName = newPartner.first_name.trim()
+    const lastName = newPartner.last_name.trim()
+    const hgiId = newPartner.hgi_partner_id.trim().toUpperCase()
     
+    // Validate all required fields
     if (!email) {
       alert('Email is required')
+      return
+    }
+
+    if (!firstName) {
+      alert('First Name is required')
+      return
+    }
+
+    if (!lastName) {
+      alert('Last Name is required')
+      return
+    }
+
+    if (!hgiId) {
+      alert('HGI Partner ID is required')
       return
     }
 
@@ -113,9 +132,9 @@ export default function PartnersManagementPage() {
       .insert({
         user_id: crypto.randomUUID(),
         email: email,
-        first_name: newPartner.first_name.trim() || null,
-        last_name: newPartner.last_name.trim() || null,
-        hgi_partner_id: newPartner.hgi_partner_id.trim().toUpperCase() || null,
+        first_name: firstName,
+        last_name: lastName,
+        hgi_partner_id: hgiId,
         personal_target: 100
       })
 
@@ -365,46 +384,55 @@ export default function PartnersManagementPage() {
                   onChange={(e) => setNewPartner({...newPartner, email: e.target.value})}
                   placeholder="partner@example.com"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
                   autoFocus
                 />
                 <p className="text-xs text-slate-500 mt-1">Required - Partner will sign in with this email</p>
               </div>
 
-              {/* First Name (Optional) */}
+              {/* First Name (Required) */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  First Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={newPartner.first_name}
                   onChange={(e) => setNewPartner({...newPartner, first_name: e.target.value})}
-                  placeholder="Optional"
+                  placeholder="First Name"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
                 />
               </div>
 
-              {/* Last Name (Optional) */}
+              {/* Last Name (Required) */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Last Name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={newPartner.last_name}
                   onChange={(e) => setNewPartner({...newPartner, last_name: e.target.value})}
-                  placeholder="Optional"
+                  placeholder="Last Name"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
                 />
               </div>
 
-              {/* HGI Partner ID (Optional) */}
+              {/* HGI Partner ID (Required) */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">HGI Partner ID</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  HGI Partner ID <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={newPartner.hgi_partner_id}
                   onChange={(e) => setNewPartner({...newPartner, hgi_partner_id: e.target.value.toUpperCase()})}
-                  placeholder="Optional"
+                  placeholder="HGI Partner ID"
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"
+                  required
                 />
-                <p className="text-xs text-slate-500 mt-1">Partner can add this later during first login</p>
               </div>
             </div>
 

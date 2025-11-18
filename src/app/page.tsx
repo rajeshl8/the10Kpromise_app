@@ -126,19 +126,19 @@ export default function Page() {
     }
   }
 
+  const loadProtectionCount = async () => {
+    const { data } = await supabase.from('protection_metrics').select('*').single()
+    if (data) setProtectedCount(Number(data.protected_count))
+  }
+
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase.from('protection_metrics').select('*').single()
-      if (data) setProtectedCount(Number(data.protected_count))
-    }
-    load()
+    loadProtectionCount()
   }, [])
 
   useEffect(() => {
     const channel = supabase.channel('realtime:protections')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'protections' }, async () => {
-        const { data } = await supabase.from('protection_metrics').select('*').single()
-        if (data) setProtectedCount(Number(data.protected_count))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'protections' }, () => {
+        loadProtectionCount()
       }).subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
@@ -209,7 +209,10 @@ export default function Page() {
           </h1>
           <div className="flex items-center gap-2">
             {user ? (<>
-              <AddProtectionDialog partner={partner} />
+              <AddProtectionDialog 
+                partner={partner} 
+                onSuccess={loadProtectionCount}
+              />
               
               {/* Admin Buttons - Only for Admins */}
               {isAdmin && (

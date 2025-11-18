@@ -139,7 +139,13 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
               </h2>
               <p className="text-sm text-slate-600 mt-1">Track your accomplishments</p>
             </div>
-            <AddProtectionDialog partner={partner} />
+            <AddProtectionDialog 
+              partner={partner} 
+              onSuccess={() => {
+                loadStats()
+                loadLeaderboard()
+              }}
+            />
           </div>
 
           {/* Completed Count - Centered */}

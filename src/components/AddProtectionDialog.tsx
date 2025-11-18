@@ -2,7 +2,13 @@
 import { useState, useTransition } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-export default function AddProtectionDialog({ partner }: { partner: { id: string, user_id: string } | null }) {
+export default function AddProtectionDialog({ 
+  partner,
+  onSuccess
+}: { 
+  partner: { id: string, user_id: string } | null
+  onSuccess?: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [notes, setNotes] = useState('')
   const [state, setState] = useState('')
@@ -24,8 +30,18 @@ export default function AddProtectionDialog({ partner }: { partner: { id: string
         promise_date: date || null,
         status: 'approved',
       })
-      if (!error) { setOpen(false); setNotes(''); setState(''); setProduct(''); setSource(''); setDate('') }
-      else alert(error.message)
+      if (!error) { 
+        setOpen(false)
+        setNotes('')
+        setState('')
+        setProduct('')
+        setSource('')
+        setDate('')
+        // Call onSuccess callback to refresh dashboard
+        if (onSuccess) onSuccess()
+      } else {
+        alert(error.message)
+      }
     })
   }
 

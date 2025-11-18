@@ -125,6 +125,8 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
 
   const isCurrentUser = (userId: string) => userId === partner?.user_id
 
+  const firstName = stats.full_name?.split(' ')[0] || 'Partner'
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       {/* Personal Stats Card */}
@@ -132,7 +134,9 @@ export default function Dashboard({ partner }: { partner: { id: string, user_id:
         <div className="rounded-2xl border border-slate-200 bg-white shadow-lg p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Your Progress</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                Welcome, {firstName}! 👋
+              </h2>
               <p className="text-sm text-slate-600 mt-1">Track your accomplishments</p>
             </div>
             <AddProtectionDialog partner={partner} />

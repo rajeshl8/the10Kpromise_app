@@ -127,6 +127,9 @@ export default function PartnersManagementPage() {
     }
 
     // Generate a random UUID for user_id (will be updated when they first sign in)
+    // Set display_name as "FirstName LastName"
+    const displayName = `${firstName} ${lastName}`
+    
     const { data, error } = await supabase
       .from('partners')
       .insert({
@@ -134,6 +137,7 @@ export default function PartnersManagementPage() {
         email: email,
         first_name: firstName,
         last_name: lastName,
+        display_name: displayName,
         hgi_partner_id: hgiId,
         personal_target: 100
       })

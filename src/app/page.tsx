@@ -127,6 +127,8 @@ export default function Page() {
   }
 
   const loadProtectionCount = async () => {
+    // Add small delay to ensure database view is updated
+    await new Promise(resolve => setTimeout(resolve, 300))
     const { data } = await supabase.from('protection_metrics').select('*').single()
     if (data) setProtectedCount(Number(data.protected_count))
   }

@@ -51,7 +51,6 @@ export default function PartnersManagementPage() {
       .order('created_at', { ascending: false })
     
     if (data) setPartners(data)
-    if (error) console.error('Error loading partners:', error)
     setLoading(false)
   }
 

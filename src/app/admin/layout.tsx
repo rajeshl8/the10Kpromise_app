@@ -34,7 +34,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       setIsAdmin(true)
     } catch (error) {
-      console.error('Admin check failed:', error)
       router.push('/')
     } finally {
       setIsLoading(false)

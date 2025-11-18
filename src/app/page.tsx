@@ -66,26 +66,29 @@ export default function Page() {
         
         if (existingByEmail && existingByEmail[0]) {
           // Partner exists! Use secure function to link their account (bypasses RLS)
-          console.log('🔗 Attempting to link partner:', user.email)
+          console.log('🔗 [v2] Attempting to link partner:', user.email, 'User ID:', user.id)
           const { data: linkedPartnerId, error: linkError } = await supabase
             .rpc('link_partner_by_email', { p_email: user.email })
           
-          console.log('🔗 Link result:', { linkedPartnerId, linkError })
+          console.log('🔗 [v2] Link result:', { linkedPartnerId, linkError })
           
-          if (!linkError && linkedPartnerId) {
-            // Reload the linked partner
-            const { data: updated } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
-            console.log('✅ Partner linked and reloaded:', updated)
-            if (updated && updated[0]) {
-              setPartner({ id: updated[0].id, user_id: updated[0].user_id })
-              setPartnerData(updated[0])
-              setIsAuthorized(true)
-              checkProfileCompletion(updated[0])
-            }
+          // Wait a moment for database to update
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Reload the linked partner
+          const { data: updated, error: selectError } = await supabase.from('partners').select('*').eq('user_id', user.id).limit(1)
+          console.log('🔍 [v2] Partner reload:', { updated, selectError })
+          
+          if (!linkError && updated && updated[0]) {
+            console.log('✅ [v2] Partner successfully linked!', updated[0])
+            setPartner({ id: updated[0].id, user_id: updated[0].user_id })
+            setPartnerData(updated[0])
+            setIsAuthorized(true)
+            checkProfileCompletion(updated[0])
           } else {
             // Link failed - show detailed error
-            console.error('❌ Failed to link partner:', linkError)
-            alert(`Error linking account: ${linkError?.message || 'Unknown error'}. Please contact admin at the10kpromise@gmail.com`)
+            console.error('❌ [v2] Failed to link partner:', { linkError, selectError, linkedPartnerId })
+            alert(`Error linking account: ${linkError?.message || selectError?.message || 'Unknown error'}. Please contact admin at the10kpromise@gmail.com`)
             setPartner(null)
             setPartnerData(null)
             setIsAuthorized(false)

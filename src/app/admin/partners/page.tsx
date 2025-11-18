@@ -67,7 +67,6 @@ export default function PartnersManagementPage() {
         first_name: editingPartner.first_name?.trim() || null,
         last_name: editingPartner.last_name?.trim() || null,
         hgi_partner_id: editingPartner.hgi_partner_id?.trim().toUpperCase() || null,
-        personal_target: editingPartner.personal_target,
         display_name: editingPartner.display_name?.trim() || null,
       })
       .eq('id', editingPartner.id)
@@ -236,7 +235,6 @@ export default function PartnersManagementPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Email</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">HGI ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Target</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Status</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Actions</th>
                 </tr>
@@ -257,7 +255,6 @@ export default function PartnersManagementPage() {
                         {partner.hgi_partner_id || '—'}
                       </code>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{partner.personal_target}</td>
                     <td className="px-4 py-3">
                       {partner.first_name && partner.last_name && partner.hgi_partner_id ? (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -333,18 +330,6 @@ export default function PartnersManagementPage() {
                   value={editingPartner.hgi_partner_id || ''}
                   onChange={(e) => setEditingPartner({...editingPartner, hgi_partner_id: e.target.value.toUpperCase()})}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                />
-              </div>
-
-              {/* Personal Target */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Personal Target</label>
-                <input
-                  type="number"
-                  value={editingPartner.personal_target}
-                  onChange={(e) => setEditingPartner({...editingPartner, personal_target: parseInt(e.target.value) || 100})}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="1"
                 />
               </div>
             </div>

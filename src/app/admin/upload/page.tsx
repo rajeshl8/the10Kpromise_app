@@ -30,6 +30,16 @@ export default function UploadPage() {
           if (productType === 'Will&Trust') productType = 'Legacy Plan'
           if (productType === 'Term Life') productType = 'Financial Security Plan'
           
+          // Parse protection count (1.0 for full credit, 0.5 for shared credit)
+          let protectionCount = 1.0
+          const countStr = r['Protection Count']?.toString().trim()
+          if (countStr) {
+            const parsed = parseFloat(countStr)
+            if (!isNaN(parsed) && parsed > 0 && parsed <= 1.0) {
+              protectionCount = parsed
+            }
+          }
+          
           return {
             partner_first_name: r['Partner First Name'] || null,
             partner_last_name:  r['Partner Last Name'] || null,
@@ -38,6 +48,7 @@ export default function UploadPage() {
             client_state:      r['Client State'] || null,
             product_type:      productType,
             client_source:     r['Source of Client'] || null,
+            protection_count:  protectionCount,
             promise_date:      iso || null,
             family_notes:      r['Family Notes'] || null,
           }
@@ -151,6 +162,7 @@ export default function UploadPage() {
               client_state: row.client_state,
               product_type: row.product_type,
               client_source: row.client_source,
+              protection_count: row.protection_count,
               promise_date: row.promise_date,
               family_notes: row.family_notes,
               status: 'approved',

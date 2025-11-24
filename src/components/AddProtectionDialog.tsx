@@ -126,8 +126,8 @@ export default function AddProtectionDialog({
                   onChange={e=>setProduct(e.target.value)}
                 >
                   <option value="">Product Type</option>
-                  <option value="Will&Trust">Will&Trust</option>
-                  <option value="Term Life">Term Life</option>
+                  <option value="Legacy Plan">Legacy Plan</option>
+                  <option value="Financial Security Plan">Financial Security Plan</option>
                 </select>
                 <select 
                   className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" 

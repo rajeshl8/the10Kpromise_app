@@ -25,13 +25,19 @@ export default function UploadPage() {
             const dd = n.padStart(2, '0')
             iso = `${yy.padStart(4, '0')}-${mm}-${dd}`
           }
+          // Map old product names to new ones for backwards compatibility
+          let productType = r['Product Type'] || null
+          if (productType === 'Will&Trust') productType = 'Legacy Plan'
+          if (productType === 'Term Life') productType = 'Financial Security Plan'
+          
           return {
             partner_first_name: r['Partner First Name'] || null,
             partner_last_name:  r['Partner Last Name'] || null,
             hgi_partner_id:    r['HGI Partner ID'] || null,
             partner_email:     r['Partner Email'] || null,
             client_state:      r['Client State'] || null,
-            product_type:      r['Product Type'] || null,
+            product_type:      productType,
+            client_source:     r['Source of Client'] || null,
             promise_date:      iso || null,
             family_notes:      r['Family Notes'] || null,
           }
@@ -129,7 +135,14 @@ export default function UploadPage() {
             partnersCreated++
           }
 
-          // 2. Insert protection directly
+          // 2. Validate required fields
+          if (!row.client_source) {
+            errorCount++
+            errors.push(`Missing Source of Client for partner: ${row.partner_email}`)
+            continue
+          }
+
+          // 3. Insert protection directly
           const { error: insertError } = await supabase
             .from('protections')
             .insert({
@@ -137,6 +150,7 @@ export default function UploadPage() {
               partner_user_id: partnerUserId,
               client_state: row.client_state,
               product_type: row.product_type,
+              client_source: row.client_source,
               promise_date: row.promise_date,
               family_notes: row.family_notes,
               status: 'approved',

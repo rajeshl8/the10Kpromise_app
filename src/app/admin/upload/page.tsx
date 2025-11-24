@@ -198,6 +198,12 @@ export default function UploadPage() {
           </div>
           <div className="flex gap-2">
             <a 
+              href="/admin/protections" 
+              className="rounded-lg px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all text-sm font-semibold shadow-md"
+            >
+              📊 View All Protections
+            </a>
+            <a 
               href="/admin/partners" 
               className="rounded-lg px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 transition-colors text-sm font-medium"
             >

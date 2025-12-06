@@ -136,7 +136,7 @@ export default function AdminProtectionsPage() {
 
   const deleteProtection = async (id: string, publicId: string) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete protection ${publicId}?\n\nThis will mark it as deleted and remove it from all counts.`
+      `⚠️ PERMANENT DELETE ⚠️\n\nAre you sure you want to permanently delete protection ${publicId}?\n\nThis action CANNOT be undone!`
     )
     
     if (!confirmed) return
@@ -144,7 +144,10 @@ export default function AdminProtectionsPage() {
     setDeleting(id)
     
     try {
-      const { error } = await supabase.rpc('soft_delete_protection', { p_id: id })
+      const { error } = await supabase
+        .from('protections')
+        .delete()
+        .eq('id', id)
       
       if (error) {
         alert(`Failed to delete: ${error.message}`)

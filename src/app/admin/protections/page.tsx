@@ -252,9 +252,11 @@ export default function AdminProtectionsPage() {
             className="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="">All Sources</option>
-            <option value="Referral">Referral</option>
-            <option value="Social Media">Social Media</option>
             <option value="Personal">Personal</option>
+            <option value="Friends & Family">Friends & Family</option>
+            <option value="Neighbor">Neighbor</option>
+            <option value="Colleague">Colleague</option>
+            <option value="Social Media">Social Media</option>
             <option value="Stall/Event/Booth/Webinar">Stall/Event/Booth/Webinar</option>
           </select>
 

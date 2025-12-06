@@ -135,9 +135,11 @@ export default function AddProtectionDialog({
                   onChange={e=>setSource(e.target.value)}
                 >
                   <option value="">Source of Client</option>
-                  <option value="Referral">Referral</option>
-                  <option value="Social Media">Social Media</option>
                   <option value="Personal">Personal</option>
+                  <option value="Friends & Family">Friends & Family</option>
+                  <option value="Neighbor">Neighbor</option>
+                  <option value="Colleague">Colleague</option>
+                  <option value="Social Media">Social Media</option>
                   <option value="Stall/Event/Booth/Webinar">Stall/Event/Booth/Webinar</option>
                 </select>
               </div>

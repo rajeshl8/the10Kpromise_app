@@ -38,6 +38,7 @@ export default function AdminProtectionsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [partners, setPartners] = useState<any[]>([])
+  const [deleting, setDeleting] = useState<string | null>(null)
   
   const PAGE_SIZE = 50
 
@@ -131,6 +132,31 @@ export default function AdminProtectionsPage() {
     setFilterCreatedTo('')
     setSearchTerm('')
     setCurrentPage(1)
+  }
+
+  const deleteProtection = async (id: string, publicId: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete protection ${publicId}?\n\nThis will mark it as deleted and remove it from all counts.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeleting(id)
+    
+    try {
+      const { error } = await supabase.rpc('soft_delete_protection', { p_id: id })
+      
+      if (error) {
+        alert(`Failed to delete: ${error.message}`)
+      } else {
+        // Refresh the list
+        loadProtections()
+      }
+    } catch (err: any) {
+      alert(`Error: ${err.message}`)
+    } finally {
+      setDeleting(null)
+    }
   }
 
   const exportToCSV = () => {
@@ -365,6 +391,7 @@ export default function AdminProtectionsPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Business Submitted Date</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Recorded At</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Notes</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -403,6 +430,16 @@ export default function AdminProtectionsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
                         {protection.family_notes || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => deleteProtection(protection.id, protection.public_id)}
+                          disabled={deleting === protection.id}
+                          className="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete this protection"
+                        >
+                          {deleting === protection.id ? '⏳' : '🗑️ Delete'}
+                        </button>
                       </td>
                     </tr>
                   ))}

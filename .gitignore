@@ -51,6 +51,10 @@ next-env.d.ts
 .cache
 *.log
 
+# Backups
+Backups/Supabase_db/*.sql
+backup.log
+
 # Optional: Exclude detailed implementation docs (uncomment if you don't want them in git)
 # docs/
 # GITHUB_CHECKLIST.md

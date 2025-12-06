@@ -142,8 +142,8 @@ export default function AdminProtectionsPage() {
       'Client State',
       'Product Type',
       'Source',
-      'Sale Date',
-      'Created At',
+      'Business Submitted Date',
+      'Recorded At',
       'Status',
       'Notes'
     ]
@@ -295,9 +295,9 @@ export default function AdminProtectionsPage() {
         <div className="mt-4 pt-4 border-t border-slate-200">
           <h4 className="text-sm font-semibold text-slate-700 mb-3">Date Filters</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sale Date Range */}
+            {/* Business Submitted Date Range */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">Sale Date Range</label>
+              <label className="text-xs font-medium text-slate-600">Business Submitted Date Range</label>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="date"
@@ -316,9 +316,9 @@ export default function AdminProtectionsPage() {
               </div>
             </div>
 
-            {/* Created At Range */}
+            {/* Recorded At Range */}
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-600">Created At Range</label>
+              <label className="text-xs font-medium text-slate-600">Recorded At Range</label>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="date"
@@ -362,8 +362,8 @@ export default function AdminProtectionsPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">State</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Product</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Source</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Sale Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Created At</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Business Submitted Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Recorded At</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Notes</th>
                   </tr>
                 </thead>

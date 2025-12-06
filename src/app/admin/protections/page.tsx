@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface Protection {
   id: string
-  protection_id: string
+  public_id: string
   partner_id: string
   client_state: string
   product_type: string
@@ -97,13 +97,13 @@ export default function AdminProtectionsPage() {
                        `${p.partners?.first_name || ''} ${p.partners?.last_name || ''}`.trim()
     const hgiId = p.partners?.hgi_partner_id || ''
     const notes = p.family_notes || ''
-    const protectionId = p.protection_id || ''
+    const publicId = p.public_id || ''
     
     return (
       partnerName.toLowerCase().includes(term) ||
       hgiId.toLowerCase().includes(term) ||
       notes.toLowerCase().includes(term) ||
-      protectionId.toLowerCase().includes(term) ||
+      publicId.toLowerCase().includes(term) ||
       p.client_state?.toLowerCase().includes(term)
     )
   })
@@ -135,7 +135,7 @@ export default function AdminProtectionsPage() {
     ]
     
     const rows = filteredProtections.map(p => [
-      p.protection_id,
+      p.public_id,
       p.partners?.display_name || `${p.partners?.first_name || ''} ${p.partners?.last_name || ''}`.trim(),
       p.partners?.hgi_partner_id || '',
       p.partners?.email || '',
@@ -306,7 +306,7 @@ export default function AdminProtectionsPage() {
                     <tr key={protection.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3">
                         <code className="text-xs font-mono bg-slate-100 px-2 py-1 rounded">
-                          {protection.protection_id}
+                          {protection.public_id}
                         </code>
                       </td>
                       <td className="px-4 py-3">

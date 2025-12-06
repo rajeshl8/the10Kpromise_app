@@ -14,7 +14,16 @@ export default function UploadPage() {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
-        const cleaned = (res.data as any[]).map((r) => {
+        const totalRows = (res.data as any[]).length
+        const cleaned = (res.data as any[])
+          .filter((r) => {
+            // Skip completely empty rows (all fields empty or just whitespace)
+            const hasAnyData = Object.values(r).some(val => 
+              val && typeof val === 'string' && val.trim() !== ''
+            )
+            return hasAnyData
+          })
+          .map((r) => {
           const d = (r['Promise Date'] || '').toString().trim()
           let iso = ''
           if (/^\d{4}-\d{2}-\d{2}$/.test(d)) iso = d
@@ -53,8 +62,11 @@ export default function UploadPage() {
             family_notes:      r['Family Notes'] || null,
           }
         })
+        
+        const skippedCount = totalRows - cleaned.length
+        const skippedMsg = skippedCount > 0 ? ` (${skippedCount} empty row${skippedCount > 1 ? 's' : ''} skipped)` : ''
         setRows(cleaned)
-        setMsg(`✅ Parsed ${cleaned.length} rows. Ready to upload!`)
+        setMsg(`✅ Parsed ${cleaned.length} rows. Ready to upload!${skippedMsg}`)
       }
     })
   }
@@ -339,7 +351,13 @@ export default function UploadPage() {
                     <td className="px-3 py-2 text-slate-700">{row.client_state || '—'}</td>
                     <td className="px-3 py-2 text-slate-700">{row.product_type || '—'}</td>
                     <td className="px-3 py-2 text-slate-700">
-                      {row.client_source || <span className="text-red-600">❌ Missing</span>}
+                      {row.client_source ? (
+                        ['Personal', 'Friends & Family', 'Neighbor', 'Colleague', 'Social Media', 'Stall/Event/Booth/Webinar'].includes(row.client_source) 
+                          ? row.client_source 
+                          : <span className="text-orange-600" title={`Invalid source: ${row.client_source}`}>⚠️ {row.client_source}</span>
+                      ) : (
+                        <span className="text-red-600">❌ Missing</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-slate-700">{row.promise_date || '—'}</td>
                   </tr>

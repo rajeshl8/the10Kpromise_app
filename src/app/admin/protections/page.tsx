@@ -128,10 +128,10 @@ export default function AdminProtectionsPage() {
       'Client State',
       'Product Type',
       'Source',
-      'Promise Date',
+      'Sale Date',
+      'Created At',
       'Status',
-      'Notes',
-      'Created At'
+      'Notes'
     ]
     
     const rows = filteredProtections.map(p => [
@@ -143,9 +143,9 @@ export default function AdminProtectionsPage() {
       p.product_type || '',
       p.client_source || '',
       p.promise_date || '',
+      new Date(p.created_at).toLocaleString(),
       p.status || '',
-      (p.family_notes || '').replace(/"/g, '""'),
-      new Date(p.created_at).toLocaleString()
+      (p.family_notes || '').replace(/"/g, '""')
     ])
     
     const csvContent = [
@@ -299,7 +299,8 @@ export default function AdminProtectionsPage() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">State</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Product</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Source</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Sale Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Created At</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Notes</th>
                   </tr>
                 </thead>
@@ -332,6 +333,10 @@ export default function AdminProtectionsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600">
                         {protection.promise_date ? new Date(protection.promise_date).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">
+                        <div>{new Date(protection.created_at).toLocaleDateString()}</div>
+                        <div className="text-xs text-slate-500">{new Date(protection.created_at).toLocaleTimeString()}</div>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
                         {protection.family_notes || '—'}

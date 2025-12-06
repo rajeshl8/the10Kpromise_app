@@ -31,6 +31,10 @@ export default function AdminProtectionsPage() {
   const [filterProduct, setFilterProduct] = useState('')
   const [filterSource, setFilterSource] = useState('')
   const [filterState, setFilterState] = useState('')
+  const [filterSaleDateFrom, setFilterSaleDateFrom] = useState('')
+  const [filterSaleDateTo, setFilterSaleDateTo] = useState('')
+  const [filterCreatedFrom, setFilterCreatedFrom] = useState('')
+  const [filterCreatedTo, setFilterCreatedTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [partners, setPartners] = useState<any[]>([])
@@ -40,7 +44,7 @@ export default function AdminProtectionsPage() {
   useEffect(() => {
     loadPartners()
     loadProtections()
-  }, [currentPage, filterPartner, filterProduct, filterSource, filterState])
+  }, [currentPage, filterPartner, filterProduct, filterSource, filterState, filterSaleDateFrom, filterSaleDateTo, filterCreatedFrom, filterCreatedTo])
 
   const loadPartners = async () => {
     const { data } = await supabase
@@ -73,6 +77,12 @@ export default function AdminProtectionsPage() {
     if (filterProduct) query = query.eq('product_type', filterProduct)
     if (filterSource) query = query.eq('client_source', filterSource)
     if (filterState) query = query.eq('client_state', filterState)
+    
+    // Date range filters
+    if (filterSaleDateFrom) query = query.gte('promise_date', filterSaleDateFrom)
+    if (filterSaleDateTo) query = query.lte('promise_date', filterSaleDateTo)
+    if (filterCreatedFrom) query = query.gte('created_at', filterCreatedFrom)
+    if (filterCreatedTo) query = query.lte('created_at', filterCreatedTo)
 
     // Pagination
     const from = (currentPage - 1) * PAGE_SIZE
@@ -115,6 +125,10 @@ export default function AdminProtectionsPage() {
     setFilterProduct('')
     setFilterSource('')
     setFilterState('')
+    setFilterSaleDateFrom('')
+    setFilterSaleDateTo('')
+    setFilterCreatedFrom('')
+    setFilterCreatedTo('')
     setSearchTerm('')
     setCurrentPage(1)
   }
@@ -199,7 +213,8 @@ export default function AdminProtectionsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-900">Filters</h3>
-          {(filterPartner || filterProduct || filterSource || filterState || searchTerm) && (
+          {(filterPartner || filterProduct || filterSource || filterState || searchTerm || 
+            filterSaleDateFrom || filterSaleDateTo || filterCreatedFrom || filterCreatedTo) && (
             <button
               onClick={clearFilters}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -274,6 +289,54 @@ export default function AdminProtectionsPage() {
             <option value="IL">Illinois</option>
             {/* Add more states as needed */}
           </select>
+        </div>
+
+        {/* Date Range Filters */}
+        <div className="mt-4 pt-4 border-t border-slate-200">
+          <h4 className="text-sm font-semibold text-slate-700 mb-3">Date Filters</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Sale Date Range */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-slate-600">Sale Date Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={filterSaleDateFrom}
+                  onChange={(e) => { setFilterSaleDateFrom(e.target.value); setCurrentPage(1); }}
+                  placeholder="From"
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="date"
+                  value={filterSaleDateTo}
+                  onChange={(e) => { setFilterSaleDateTo(e.target.value); setCurrentPage(1); }}
+                  placeholder="To"
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Created At Range */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-slate-600">Created At Range</label>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="date"
+                  value={filterCreatedFrom}
+                  onChange={(e) => { setFilterCreatedFrom(e.target.value); setCurrentPage(1); }}
+                  placeholder="From"
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="date"
+                  value={filterCreatedTo}
+                  onChange={(e) => { setFilterCreatedTo(e.target.value); setCurrentPage(1); }}
+                  placeholder="To"
+                  className="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

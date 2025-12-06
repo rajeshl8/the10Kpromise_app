@@ -111,11 +111,21 @@ export default function UploadPage() {
 
           // If partner doesn't exist, create them!
           if (!partnerId || !partnerUserId) {
-            if (!row.partner_email || !row.hgi_partner_id) {
+            // Need at least email OR HGI ID, plus first and last name
+            if (!row.partner_email && !row.hgi_partner_id) {
               errorCount++
-              errors.push(`Missing email or HGI ID for partner: ${row.partner_first_name} ${row.partner_last_name}`)
+              errors.push(`Row missing both Email AND HGI ID. Need at least one. Names: ${row.partner_first_name || 'N/A'} ${row.partner_last_name || 'N/A'}`)
               continue
             }
+
+            if (!row.partner_first_name || !row.partner_last_name) {
+              errorCount++
+              errors.push(`Missing First or Last Name for partner: ${row.partner_email || row.hgi_partner_id || 'Unknown'}`)
+              continue
+            }
+
+            // Generate email if missing (using HGI ID)
+            const partnerEmail = row.partner_email || `${row.hgi_partner_id}@temp.the10kpromise.com`
 
             // Generate a unique user_id for this admin-created partner
             // When they login with Google later, we'll update this user_id to their real auth user_id
@@ -125,7 +135,7 @@ export default function UploadPage() {
               .from('partners')
               .insert({
                 user_id: tempUserId,
-                email: row.partner_email,
+                email: partnerEmail,
                 first_name: row.partner_first_name,
                 last_name: row.partner_last_name,
                 display_name: `${row.partner_first_name || ''} ${row.partner_last_name || ''}`.trim(),
@@ -137,7 +147,7 @@ export default function UploadPage() {
 
             if (partnerError || !newPartner) {
               errorCount++
-              errors.push(`Failed to create partner ${row.partner_email}: ${partnerError?.message || 'Unknown error'}`)
+              errors.push(`Failed to create partner ${partnerEmail}: ${partnerError?.message || 'Unknown error'}`)
               continue
             }
 
@@ -259,7 +269,7 @@ export default function UploadPage() {
               className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
             />
             <p className="mt-2 text-xs text-slate-500">
-              ℹ️ Partners will be automatically created if they don't exist. Make sure each row has Email, HGI ID, First Name, and Last Name.
+              ℹ️ Partners will be automatically created if they don't exist. <strong>Required:</strong> First Name, Last Name, (Email OR HGI ID), Source of Client.
             </p>
           </div>
 
@@ -286,6 +296,70 @@ export default function UploadPage() {
           )}
         </div>
       </div>
+
+      {/* Preview Section */}
+      {rows.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-lg p-8 mt-6">
+          <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span>👀</span> Data Preview ({rows.length} rows)
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">First Name</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Last Name</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Email</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">HGI ID</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">State</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Product</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Source</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {rows.slice(0, 10).map((row, idx) => (
+                  <tr key={idx} className={`hover:bg-slate-50 ${
+                    (!row.partner_email && !row.hgi_partner_id) || !row.partner_first_name || !row.partner_last_name || !row.client_source
+                      ? 'bg-red-50'
+                      : ''
+                  }`}>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.partner_first_name || <span className="text-red-600">❌ Missing</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.partner_last_name || <span className="text-red-600">❌ Missing</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.partner_email || <span className="text-yellow-600">⚠️ None</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.hgi_partner_id || <span className="text-yellow-600">⚠️ None</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">{row.client_state || '—'}</td>
+                    <td className="px-3 py-2 text-slate-700">{row.product_type || '—'}</td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.client_source || <span className="text-red-600">❌ Missing</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">{row.promise_date || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {rows.length > 10 && (
+              <p className="mt-3 text-sm text-slate-500 text-center">
+                Showing first 10 of {rows.length} rows
+              </p>
+            )}
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs text-blue-800">
+              <strong>Required Fields:</strong> First Name, Last Name, (Email OR HGI ID), Source of Client<br/>
+              <strong>Legend:</strong> <span className="text-red-600">❌ Missing (Required)</span> | <span className="text-yellow-600">⚠️ Empty (OK if other ID present)</span> | Red rows will fail
+            </p>
+          </div>
+        </div>
+      )}
 
     </div>
   )

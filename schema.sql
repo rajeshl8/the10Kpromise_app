@@ -215,7 +215,7 @@ select
   count(pr.id) filter (where pr.status = 'approved' and pr.deleted_at is null) as completed_count,
   p.created_at
 from public.partners p
-left join public.protections pr on pr.partner_user_id = p.user_id
+left join public.protections pr on pr.partner_id = p.id
 group by p.id, p.user_id, p.email, p.display_name, p.first_name, p.last_name, p.personal_target, p.created_at;
 
 -- Leaderboard view (top performers)
@@ -232,7 +232,7 @@ select
     1
   ) as completion_percentage
 from public.partners p
-left join public.protections pr on pr.partner_user_id = p.user_id
+left join public.protections pr on pr.partner_id = p.id
 group by p.id, p.user_id, p.first_name, p.last_name, p.display_name, p.email, p.personal_target
 having count(pr.id) filter (where pr.status = 'approved' and pr.deleted_at is null) > 0
 order by completed_count desc, completion_percentage desc

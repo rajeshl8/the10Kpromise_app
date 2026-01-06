@@ -264,7 +264,7 @@ export default function Page() {
             </div>
           </div>
           
-          <p className="mt-6 text-slate-600">Out of a goal of {GOAL.toLocaleString()} families in 12 months.</p>
+          <p className="mt-6 text-slate-600">Out of a goal of {GOAL.toLocaleString()} promises in 12 months.</p>
         </div>
 
         {user && (

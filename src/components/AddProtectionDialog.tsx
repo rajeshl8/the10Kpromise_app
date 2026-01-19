@@ -16,13 +16,46 @@ export default function AddProtectionDialog({
   const [source, setSource] = useState('')
   const [date, setDate] = useState('')
   const [isPending, startTransition] = useTransition()
+  
+  // State for "on behalf of" feature
+  const [isOnBehalfOf, setIsOnBehalfOf] = useState(false)
+  const [otherPartnerName, setOtherPartnerName] = useState('')
+  const [otherPartnerCode, setOtherPartnerCode] = useState('')
+  const [lookupError, setLookupError] = useState('')
 
   const onSubmit = async () => {
     if (!partner) return
+    
+    let targetPartnerId = partner.id
+    let targetPartnerUserId = partner.user_id
+    
+    // If entering on behalf of another partner, look them up first
+    if (isOnBehalfOf) {
+      if (!otherPartnerCode.trim()) {
+        setLookupError('Partner Code is required')
+        return
+      }
+      
+      const { data: otherPartner, error: lookupErr } = await supabase
+        .from('partners')
+        .select('id, user_id')
+        .eq('hgi_partner_id', otherPartnerCode.trim())
+        .single()
+      
+      if (lookupErr || !otherPartner) {
+        setLookupError('Partner not found. Please check the Partner Code.')
+        return
+      }
+      
+      targetPartnerId = otherPartner.id
+      targetPartnerUserId = otherPartner.user_id
+      setLookupError('')
+    }
+    
     startTransition(async () => {
       const { error } = await supabase.from('protections').insert({
-        partner_id: partner.id,
-        partner_user_id: partner.user_id,
+        partner_id: targetPartnerId,
+        partner_user_id: targetPartnerUserId,
         family_notes: notes || null,
         client_state: state || null,
         product_type: product || null,
@@ -37,6 +70,10 @@ export default function AddProtectionDialog({
         setProduct('')
         setSource('')
         setDate('')
+        setIsOnBehalfOf(false)
+        setOtherPartnerName('')
+        setOtherPartnerCode('')
+        setLookupError('')
         // Call onSuccess callback to refresh dashboard
         if (onSuccess) onSuccess()
       } else {
@@ -53,6 +90,49 @@ export default function AddProtectionDialog({
           <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl p-6" onClick={e=>e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4 text-slate-900">Log a protected family</h3>
             <div className="grid gap-4">
+              
+              {/* On Behalf Of Toggle */}
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <input 
+                  type="checkbox" 
+                  id="onBehalfOf"
+                  checked={isOnBehalfOf}
+                  onChange={(e) => {
+                    setIsOnBehalfOf(e.target.checked)
+                    setLookupError('')
+                  }}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <label htmlFor="onBehalfOf" className="text-sm font-medium text-slate-700 cursor-pointer">
+                  Enter entry for another Partner?
+                </label>
+              </div>
+
+              {/* Other Partner Fields (conditional) */}
+              {isOnBehalfOf && (
+                <div className="grid gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Other Partner Details</p>
+                  <input 
+                    className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                    placeholder="Partner Name (optional)" 
+                    value={otherPartnerName} 
+                    onChange={e => setOtherPartnerName(e.target.value)} 
+                  />
+                  <input 
+                    className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                    placeholder="Partner Code (HGI Partner ID) *" 
+                    value={otherPartnerCode} 
+                    onChange={e => {
+                      setOtherPartnerCode(e.target.value)
+                      setLookupError('')
+                    }} 
+                  />
+                  {lookupError && (
+                    <p className="text-sm text-red-600 font-medium">{lookupError}</p>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <select 
                   className="border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white" 

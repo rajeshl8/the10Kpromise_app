@@ -29,27 +29,60 @@ export default function AddProtectionDialog({
     let targetPartnerId = partner.id
     let targetPartnerUserId = partner.user_id
     
-    // If entering on behalf of another partner, look them up first
+    // If entering on behalf of another partner, look them up or create them
     if (isOnBehalfOf) {
       if (!otherPartnerCode.trim()) {
         setLookupError('Partner Code is required')
         return
       }
       
+      // Try to find existing partner
       const { data: otherPartner, error: lookupErr } = await supabase
         .from('partners')
         .select('id, user_id')
         .eq('hgi_partner_id', otherPartnerCode.trim())
         .single()
       
-      if (lookupErr || !otherPartner) {
-        setLookupError('Partner not found. Please check the Partner Code.')
-        return
+      if (otherPartner) {
+        // Partner exists, use their details
+        targetPartnerId = otherPartner.id
+        targetPartnerUserId = otherPartner.user_id
+        setLookupError('')
+      } else {
+        // Partner not found - create them as a junior partner
+        if (!otherPartnerName.trim()) {
+          setLookupError('Partner not found. Please provide Partner Name to create a new entry.')
+          return
+        }
+        
+        // Parse name (simple split by space)
+        const nameParts = otherPartnerName.trim().split(' ')
+        const firstName = nameParts[0]
+        const lastName = nameParts.slice(1).join(' ') || firstName
+        
+        // Create new junior partner with placeholder user_id
+        const { data: newPartner, error: createErr } = await supabase
+          .from('partners')
+          .insert({
+            user_id: crypto.randomUUID(), // Placeholder user_id (not linked to auth)
+            email: `${otherPartnerCode.toLowerCase()}@junior.placeholder`,
+            first_name: firstName,
+            last_name: lastName,
+            hgi_partner_id: otherPartnerCode.trim(),
+            personal_target: 100
+          })
+          .select('id, user_id')
+          .single()
+        
+        if (createErr || !newPartner) {
+          setLookupError('Failed to create partner: ' + (createErr?.message || 'Unknown error'))
+          return
+        }
+        
+        targetPartnerId = newPartner.id
+        targetPartnerUserId = newPartner.user_id
+        setLookupError('')
       }
-      
-      targetPartnerId = otherPartner.id
-      targetPartnerUserId = otherPartner.user_id
-      setLookupError('')
     }
     
     startTransition(async () => {
